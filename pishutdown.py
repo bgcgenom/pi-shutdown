@@ -5,24 +5,42 @@ import RPi.GPIO as GPIO
 from subprocess import call
 from datetime import datetime
 import time
+import lcddriver
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Setup logging envirioment
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+formatter = logging.Formatter('%(asctime)s,:%(levelname)s:%(name)s,:%(message)s')
+file_handler = logging.FileHandler('ammpi.log')
+file_handler.setFormatter(formatter)
+handler = RotatingFileHandler('ammpi.log', maxBytes=1000000, backupCount=5)
+logger.addHandler(file_handler)
+
+logger.info("pishutdown service started")
 
 # pushbutton connected to this GPIO pin, using pin 5 also has the benefit of
 # waking / powering up Raspberry Pi when button is pressed
-shutdownPin = 5
+shutdownPin = 23
 
 # if button pressed for at least this long then shut down. if less then reboot.
-shutdownMinSeconds = 3
+shutdownMinSeconds = 5
 
 # button debounce time in seconds
 debounceSeconds = 0.01
 
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setup(shutdownPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 buttonPressedTime = None
 
+# Set varable to call the lcd driver and clear the screen.
+lcd = lcddriver.lcd()
 
 def buttonStateChanged(pin):
+    global logger
     global buttonPressedTime
 
     if not (GPIO.input(pin)):
@@ -35,11 +53,31 @@ def buttonStateChanged(pin):
             elapsed = (datetime.now() - buttonPressedTime).total_seconds()
             buttonPressedTime = None
             if elapsed >= shutdownMinSeconds:
+                logger.warning("Shutdown initiated")
+                time.sleep(1)
+                lcd.lcd_clear()
+                time.sleep(0.5)
+                lcd.lcd_display_string("Shutting down...    ", 1)
                 # button pressed for more than specified time, shutdown
+                call(['systemctl', 'stop', 'ammpi'], shell=False)
+                time.sleep(5)
+                #turn off backlight
+                lcd.lcd_clear()
+                time.sleep(0.5)
+                lcd.lcd_backlight("off")
+                logger.info("LCD backlight off.")
                 call(['shutdown', '-h', 'now'], shell=False)
             elif elapsed >= debounceSeconds:
+                logger.warning("Reboot initiated")
+                time.sleep(1)
+                lcd.lcd_clear()
+                time.sleep(0.5)
+                lcd.lcd_display_string("Rebooting...        ", 1)
                 # button pressed for a shorter time, reboot
+                call(['systemctl', 'stop', 'ammpi'], shell=False)
+                time.sleep(5)
                 call(['shutdown', '-r', 'now'], shell=False)
+
 
 
 # subscribe to button presses
