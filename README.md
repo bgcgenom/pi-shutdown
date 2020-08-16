@@ -27,9 +27,9 @@ sudo systemctl enable pishutdown.service
 sudo systemctl start pishutdown
 sudo systemctl stop pishutdown
 sudo systemctl restart pishutdown
-'''
+```
 
-## View Log Files:
+### View Log Files:
 From the directroy you are running pishutdown.sh
 ```
 cat pishutdown.log
