@@ -1,11 +1,15 @@
-pi-shutdown
+pi-shutdown forked from gilyes/pi-shutdown
 ===========
 
 Shutdown/reboot(/power on) Raspberry Pi with pushbutton
 
 ## Usage:
 
-Connect the LCD via I2C to Raspberry Pi and ensure you are able to communicate to it on address 0x27
+Connect the LCD with I2C connector to Raspberry Pi and ensure you are able to communicate to it on address 0x27:
+```
+i2cdetect -y 1
+```
+* I2C must be enabled in raspiconfig *
 
 Connect pushbutton to BCM GPIO pin 23 and ground then run:
 ```
