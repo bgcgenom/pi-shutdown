@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.propagate = False
 formatter = logging.Formatter('%(asctime)s,:%(levelname)s:%(name)s,:%(message)s')
-file_handler = logging.FileHandler('ammpi.log')
+file_handler = logging.FileHandler('pishutdown.log')
 file_handler.setFormatter(formatter)
-handler = RotatingFileHandler('ammpi.log', maxBytes=1000000, backupCount=5)
+handler = RotatingFileHandler('pishutdown.log', maxBytes=10000, backupCount=5)
 logger.addHandler(file_handler)
 
 logger.info("pishutdown service started")
 
-# pushbutton connected to this GPIO pin, using pin 5 also has the benefit of
+# pushbutton connected to this BCM GPIO pin, using pin 23 also has the benefit of
 # waking / powering up Raspberry Pi when button is pressed
 shutdownPin = 23
 
@@ -59,7 +59,8 @@ def buttonStateChanged(pin):
                 time.sleep(0.5)
                 lcd.lcd_display_string("Shutting down...    ", 1)
                 # button pressed for more than specified time, shutdown
-                call(['systemctl', 'stop', 'ammpi'], shell=False)
+                # Stop service before shutdown
+                call(['systemctl', 'stop', 'ServiceNameHere'], shell=False)
                 time.sleep(5)
                 #turn off backlight
                 lcd.lcd_clear()
@@ -74,7 +75,8 @@ def buttonStateChanged(pin):
                 time.sleep(0.5)
                 lcd.lcd_display_string("Rebooting...        ", 1)
                 # button pressed for a shorter time, reboot
-                call(['systemctl', 'stop', 'ammpi'], shell=False)
+                # Stop service before shutdown
+                call(['systemctl', 'stop', 'ServiceNameHere'], shell=False)
                 time.sleep(5)
                 call(['shutdown', '-r', 'now'], shell=False)
 
